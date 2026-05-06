@@ -1,6 +1,14 @@
+import 'dart:ffi';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:ffi/ffi.dart';
 import 'package:test/test.dart';
 import 'package:nozzle/nozzle.dart';
+
+const testWidth = 4;
+const testHeight = 4;
+const testRowStrideBytes = 16; // testWidth * 4 bytes for RGBA8
+const defaultTimeoutMs = 5000;
 
 bool _canLoadLibrary() {
   try {
@@ -13,6 +21,9 @@ bool _canLoadLibrary() {
 
 void main() {
   final hasLib = _canLoadLibrary();
+  final hasGpu = hasLib &&
+      (Platform.environment['CI'] == null &&
+          Platform.environment['GITHUB_ACTIONS'] == null);
 
   group('ErrorCode', () {
     test('values match C enum', () {
@@ -189,21 +200,77 @@ void main() {
     });
   });
 
+  group('CPU pixel functions', () {
+    test('swizzleChannels swaps R and B', () {
+      final src = malloc<Uint8>(4);
+      final dst = malloc<Uint8>(4);
+      try {
+        src[0] = 255; // R
+        src[1] = 0; // G
+        src[2] = 0; // B
+        src[3] = 255; // A
+        swizzleChannels(src.cast(), dst.cast(), 1, 1, 4, 4,
+            TextureFormat.rgba8Unorm, [2, 1, 0, 3]);
+        expect(dst[0], 0); // B -> channel 0
+        expect(dst[1], 0); // G -> channel 1
+        expect(dst[2], 255); // R -> channel 2
+        expect(dst[3], 255); // A -> channel 3
+      } finally {
+        malloc.free(src);
+        malloc.free(dst);
+      }
+    }, skip: !hasLib ? 'library not available' : null);
+
+    test('widenUint16ToUint32 zero-extends', () {
+      final src = malloc<Uint8>(2);
+      final dst = malloc<Uint8>(4);
+      try {
+        src[0] = 0x34; // uint16 0x1234 little-endian
+        src[1] = 0x12;
+        widenUint16ToUint32(src.cast(), dst.cast(), 1, 1, 2, 4, 1);
+        expect(dst[0], 0x34); // uint32 0x00001234 little-endian
+        expect(dst[1], 0x12);
+        expect(dst[2], 0x00);
+        expect(dst[3], 0x00);
+      } finally {
+        malloc.free(src);
+        malloc.free(dst);
+      }
+    }, skip: !hasLib ? 'library not available' : null);
+
+    test('convertUint32ToFloat32 converts 42 to 42.0', () {
+      final src = malloc<Uint8>(4);
+      final dst = malloc<Uint8>(4);
+      try {
+        src[0] = 42; // uint32 42 little-endian
+        src[1] = 0;
+        src[2] = 0;
+        src[3] = 0;
+        convertUint32ToFloat32(src.cast(), dst.cast(), 1, 1, 4, 4, 1);
+        // 42.0 in IEEE 754 float32 = 0x42280000
+        final bytes = Uint8List(4);
+        for (var i = 0; i < 4; i++) {
+          bytes[i] = dst[i];
+        }
+        final float = ByteData.view(bytes.buffer).getFloat32(0, Endian.little);
+        expect(float, closeTo(42.0, 0.001));
+      } finally {
+        malloc.free(src);
+        malloc.free(dst);
+      }
+    }, skip: !hasLib ? 'library not available' : null);
+  });
+
   group('GPU', () {
     test('sender create/destroy', () {
-      Sender sender;
-      try {
-        sender = Sender.create(const SenderDesc(
-          name: 'dart-test-sender',
-          applicationName: 'nozzle-dart-test',
-        ));
-      } on NozzleException {
-        return;
-      }
+      final sender = Sender.create(const SenderDesc(
+        name: 'dart-test-sender',
+        applicationName: 'nozzle-dart-test',
+      ));
       final info = sender.info();
       expect(info.name, 'dart-test-sender');
       sender.close();
-    }, skip: !hasLib ? 'library not available' : null);
+    }, skip: !hasGpu ? 'GPU not available' : null);
 
     test('empty name fails', () {
       expect(
@@ -216,23 +283,17 @@ void main() {
     }, skip: !hasLib ? 'library not available' : null);
 
     test('receiver create/destroy', () {
-      Sender sender;
-      try {
-        sender = Sender.create(const SenderDesc(
-          name: 'dart-test-recv',
-          applicationName: 'nozzle-dart-test',
-        ));
-      } on NozzleException {
-        return;
-      }
+      final sender = Sender.create(const SenderDesc(
+        name: 'dart-test-recv',
+        applicationName: 'nozzle-dart-test',
+      ));
       final receiver = Receiver.create(const ReceiverDesc(
         name: 'dart-test-recv',
         applicationName: 'nozzle-dart-test',
       ));
-      // receiver may or may not connect depending on timing
       receiver.close();
       sender.close();
-    }, skip: !hasLib ? 'library not available' : null);
+    }, skip: !hasGpu ? 'GPU not available' : null);
 
     test('enumerate senders', () {
       final senders = enumerateSenders();
@@ -240,36 +301,26 @@ void main() {
     }, skip: !hasLib ? 'library not available' : null);
 
     test('writable frame with pixel data', () {
-      late Sender sender;
-      try {
-        sender = Sender.create(const SenderDesc(
-          name: 'dart-test-frame',
-          applicationName: 'nozzle-dart-test',
-        ));
-      } on NozzleException {
-        return;
-      }
-      try {
-        final frame = sender.acquireWritableFrame(
-            4, 4, TextureFormat.rgba8Unorm);
-        final pixels = frame.lockWritablePixels(TextureOrigin.topLeft);
-        expect(pixels.width, 4);
-        expect(pixels.height, 4);
-        expect(pixels.rowStrideBytes, greaterThanOrEqualTo(16));
-        for (var y = 0; y < pixels.height; y++) {
-          final row = pixels.row(y);
-          for (var i = 0; i < row.length; i++) {
-            row[i] = 0xFF;
-          }
+      final sender = Sender.create(const SenderDesc(
+        name: 'dart-test-frame',
+        applicationName: 'nozzle-dart-test',
+      ));
+      final frame = sender.acquireWritableFrame(
+          testWidth, testHeight, TextureFormat.rgba8Unorm);
+      final pixels = frame.lockWritablePixels(TextureOrigin.topLeft);
+      expect(pixels.width, testWidth);
+      expect(pixels.height, testHeight);
+      expect(pixels.rowStrideBytes, greaterThanOrEqualTo(testRowStrideBytes));
+      for (var y = 0; y < pixels.height; y++) {
+        final row = pixels.row(y);
+        for (var i = 0; i < row.length; i++) {
+          row[i] = 0xFF;
         }
-        pixels.unmap();
-        sender.commitFrame(frame);
-      } on NozzleException {
-        // GPU resource creation may fail on headless CI
-      } finally {
-        sender.close();
       }
-    }, skip: !hasLib ? 'library not available' : null);
+      pixels.unmap();
+      sender.commitFrame(frame);
+      sender.close();
+    }, skip: !hasGpu ? 'GPU not available' : null);
 
     test('gpu check', () {
       expect(isGpuAvailable(), isA<bool>());
