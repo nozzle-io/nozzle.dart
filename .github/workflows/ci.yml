@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libdrm-dev libgbm-dev libegl-dev libgl-dev
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Build native library
+        run: make
+
+      - name: Dart pub get
+        run: dart pub get
+
+      - name: Dart analyze
+        run: dart analyze
+
+      - name: Dart test
+        run: dart test

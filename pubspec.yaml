@@ -1,0 +1,13 @@
+name: nozzle
+description: Dart FFI bindings for the nozzle GPU texture sharing library.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  ffi: ^2.2.0
+
+dev_dependencies:
+  test: ^1.25.0
