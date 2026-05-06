@@ -13,7 +13,7 @@ else
 	PLATFORM := linux
 endif
 
-CXXFLAGS := -std=c++17 -fno-exceptions -fno-rtti -O2
+CXXFLAGS := -std=c++17 -fno-exceptions -fno-rtti -O2 -fPIC
 
 COMMON_SRCS := \
 	$(NOZZLE_DIR)/src/common/ipc.cpp \
@@ -44,7 +44,7 @@ ifeq ($(PLATFORM),macos)
 		$(NOZZLE_DIR)/src/common/channel_swizzle_vimage.cpp \
 		$(NOZZLE_DIR)/src/common/format_convert_vimage.cpp
 	LIB := $(BUILD_DIR)/libnozzle.dylib
-	LDFLAGS := -dynamiclib -framework Metal -framework IOSurface -framework Foundation -framework Accelerate -framework OpenGL -lobjc -lc++
+	LDFLAGS := -dynamiclib -framework Metal -framework IOSurface -framework Foundation -framework Accelerate -framework OpenGL -lobjc -lstdc++
 endif
 
 ifeq ($(PLATFORM),linux)
@@ -62,7 +62,7 @@ ifeq ($(PLATFORM),windows)
 		$(NOZZLE_DIR)/src/backends/d3d11/d3d11_texture.cpp \
 		$(NOZZLE_DIR)/src/backends/d3d11/d3d11_sync.cpp
 	LIB := $(BUILD_DIR)/nozzle.dll
-	LDFLAGS := -shared -ld3d11 -ldxgi -lopengl32 -lbcrypt -lc++
+	LDFLAGS := -shared -ld3d11 -ldxgi -lopengl32 -lbcrypt -lstdc++
 endif
 
 INCLUDES := -I$(NOZZLE_DIR)/include -I$(NOZZLE_DIR)/src -I$(PLOG_DIR)
