@@ -65,22 +65,27 @@ enum TextureFormat {
   unknown(0),
   r8Unorm(1),
   rg8Unorm(2),
-  rgba8Unorm(3),
-  bgra8Unorm(4),
-  rgba8Srgb(5),
-  bgra8Srgb(6),
-  r16Unorm(7),
-  rg16Unorm(8),
-  rgba16Unorm(9),
-  r16Float(10),
-  rg16Float(11),
-  rgba16Float(12),
-  r32Float(13),
-  rg32Float(14),
-  rgba32Float(15),
-  r32Uint(16),
-  rgba32Uint(17),
-  depth32Float(18);
+  rgb8Unorm(3),
+  rgba8Unorm(4),
+  bgra8Unorm(5),
+  rgba8Srgb(6),
+  bgra8Srgb(7),
+  r16Unorm(8),
+  rg16Unorm(9),
+  rgb16Unorm(10),
+  rgba16Unorm(11),
+  r16Float(12),
+  rg16Float(13),
+  rgb16Float(14),
+  rgba16Float(15),
+  r32Float(16),
+  rg32Float(17),
+  rgb32Float(18),
+  rgba32Float(19),
+  r32Uint(20),
+  rgba32Uint(21),
+  rgb32Uint(22),
+  depth32Float(23);
 
   const TextureFormat(this.value);
   final int value;
@@ -94,6 +99,7 @@ enum TextureFormat {
         TextureFormat.rg8Unorm => 2,
         TextureFormat.r16Unorm => 2,
         TextureFormat.r16Float => 2,
+        TextureFormat.rgb8Unorm => 3,
         TextureFormat.rgba8Unorm ||
         TextureFormat.bgra8Unorm ||
         TextureFormat.rgba8Srgb ||
@@ -104,11 +110,14 @@ enum TextureFormat {
         TextureFormat.r32Uint ||
         TextureFormat.depth32Float =>
           4,
+        TextureFormat.rgb16Unorm ||
+        TextureFormat.rgb16Float ||
         TextureFormat.rgba16Unorm ||
         TextureFormat.rgba16Float ||
         TextureFormat.rg32Float =>
           8,
         TextureFormat.rgba32Float || TextureFormat.rgba32Uint => 16,
+        TextureFormat.rgb32Float || TextureFormat.rgb32Uint => 12,
         TextureFormat.unknown => 0,
       };
 }
@@ -150,6 +159,33 @@ enum TextureOrigin {
 
   static TextureOrigin fromValue(int v) => TextureOrigin.values
       .firstWhere((e) => e.value == v, orElse: () => topLeft);
+}
+
+/// How a texture was transferred.
+enum TransferMode {
+  unknown(0),
+  zeroCopySharedTexture(1),
+  gpuCopy(2),
+  cpuCopy(3);
+
+  const TransferMode(this.value);
+  final int value;
+
+  static TransferMode fromValue(int v) => TransferMode.values
+      .firstWhere((e) => e.value == v, orElse: () => unknown);
+}
+
+/// Synchronization mode for frame access.
+enum SyncMode {
+  none(0),
+  accessGuarded(1),
+  gpuFenceBestEffort(2);
+
+  const SyncMode(this.value);
+  final int value;
+
+  static SyncMode fromValue(int v) =>
+      SyncMode.values.firstWhere((e) => e.value == v, orElse: () => none);
 }
 
 /// How a texture format was determined.
@@ -241,9 +277,11 @@ class ConnectedSenderInfo {
     required this.width,
     required this.height,
     required this.format,
+    required this.semanticFormat,
     required this.estimatedFps,
     required this.frameCounter,
     required this.lastUpdateTimeNs,
+    required this.nativeFormatModifier,
   });
 
   final String name;
@@ -253,9 +291,11 @@ class ConnectedSenderInfo {
   final int width;
   final int height;
   final TextureFormat format;
+  final TextureFormat semanticFormat;
   final double estimatedFps;
   final int frameCounter;
   final int lastUpdateTimeNs;
+  final int nativeFormatModifier;
 }
 
 /// Metadata about a frame.
@@ -266,6 +306,9 @@ class FrameInfo {
     required this.width,
     required this.height,
     required this.format,
+    required this.semanticFormat,
+    required this.transferMode,
+    required this.syncMode,
     required this.droppedFrameCount,
   });
 
@@ -274,6 +317,9 @@ class FrameInfo {
   final int width;
   final int height;
   final TextureFormat format;
+  final TextureFormat semanticFormat;
+  final TransferMode transferMode;
+  final SyncMode syncMode;
   final int droppedFrameCount;
 }
 

@@ -85,7 +85,28 @@ void main() {
     test('values match C enum', () {
       expect(TextureFormat.unknown.value, 0);
       expect(TextureFormat.r8Unorm.value, 1);
-      expect(TextureFormat.depth32Float.value, 18);
+      expect(TextureFormat.rg8Unorm.value, 2);
+      expect(TextureFormat.rgb8Unorm.value, 3);
+      expect(TextureFormat.rgba8Unorm.value, 4);
+      expect(TextureFormat.bgra8Unorm.value, 5);
+      expect(TextureFormat.rgba8Srgb.value, 6);
+      expect(TextureFormat.bgra8Srgb.value, 7);
+      expect(TextureFormat.r16Unorm.value, 8);
+      expect(TextureFormat.rg16Unorm.value, 9);
+      expect(TextureFormat.rgb16Unorm.value, 10);
+      expect(TextureFormat.rgba16Unorm.value, 11);
+      expect(TextureFormat.r16Float.value, 12);
+      expect(TextureFormat.rg16Float.value, 13);
+      expect(TextureFormat.rgb16Float.value, 14);
+      expect(TextureFormat.rgba16Float.value, 15);
+      expect(TextureFormat.r32Float.value, 16);
+      expect(TextureFormat.rg32Float.value, 17);
+      expect(TextureFormat.rgb32Float.value, 18);
+      expect(TextureFormat.rgba32Float.value, 19);
+      expect(TextureFormat.r32Uint.value, 20);
+      expect(TextureFormat.rgba32Uint.value, 21);
+      expect(TextureFormat.rgb32Uint.value, 22);
+      expect(TextureFormat.depth32Float.value, 23);
     });
 
     test('bytesPerPixel returns correct values', () {
@@ -93,6 +114,7 @@ void main() {
       expect(TextureFormat.rg8Unorm.bytesPerPixel, 2);
       expect(TextureFormat.r16Unorm.bytesPerPixel, 2);
       expect(TextureFormat.r16Float.bytesPerPixel, 2);
+      expect(TextureFormat.rgb8Unorm.bytesPerPixel, 3);
       expect(TextureFormat.rgba8Unorm.bytesPerPixel, 4);
       expect(TextureFormat.bgra8Unorm.bytesPerPixel, 4);
       expect(TextureFormat.rgba8Srgb.bytesPerPixel, 4);
@@ -102,11 +124,15 @@ void main() {
       expect(TextureFormat.r32Float.bytesPerPixel, 4);
       expect(TextureFormat.r32Uint.bytesPerPixel, 4);
       expect(TextureFormat.depth32Float.bytesPerPixel, 4);
+      expect(TextureFormat.rgb16Unorm.bytesPerPixel, 8);
       expect(TextureFormat.rgba16Unorm.bytesPerPixel, 8);
+      expect(TextureFormat.rgb16Float.bytesPerPixel, 8);
       expect(TextureFormat.rgba16Float.bytesPerPixel, 8);
       expect(TextureFormat.rg32Float.bytesPerPixel, 8);
       expect(TextureFormat.rgba32Float.bytesPerPixel, 16);
       expect(TextureFormat.rgba32Uint.bytesPerPixel, 16);
+      expect(TextureFormat.rgb32Float.bytesPerPixel, 12);
+      expect(TextureFormat.rgb32Uint.bytesPerPixel, 12);
       expect(TextureFormat.unknown.bytesPerPixel, 0);
     });
   });
@@ -151,6 +177,23 @@ void main() {
       expect(NativeFormatKind.dxgiFormat.value, 2);
       expect(NativeFormatKind.drmFourcc.value, 3);
       expect(NativeFormatKind.glInternalFormat.value, 4);
+    });
+  });
+
+  group('TransferMode', () {
+    test('values match C enum', () {
+      expect(TransferMode.unknown.value, 0);
+      expect(TransferMode.zeroCopySharedTexture.value, 1);
+      expect(TransferMode.gpuCopy.value, 2);
+      expect(TransferMode.cpuCopy.value, 3);
+    });
+  });
+
+  group('SyncMode', () {
+    test('values match C enum', () {
+      expect(SyncMode.none.value, 0);
+      expect(SyncMode.accessGuarded.value, 1);
+      expect(SyncMode.gpuFenceBestEffort.value, 2);
     });
   });
 

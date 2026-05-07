@@ -53,12 +53,16 @@ base class NativeNozzleConnectedSenderInfo extends Struct {
   external int height;
   @Uint32()
   external int format;
+  @Uint32()
+  external int semantic_format;
   @Double()
   external double estimated_fps;
   @Uint64()
   external int frame_counter;
   @Uint64()
   external int last_update_time_ns;
+  @Uint64()
+  external int native_format_modifier;
 }
 
 base class NativeNozzleFrameInfo extends Struct {
@@ -72,6 +76,12 @@ base class NativeNozzleFrameInfo extends Struct {
   external int height;
   @Uint32()
   external int format;
+  @Uint32()
+  external int semantic_format;
+  @Uint32()
+  external int transfer_mode;
+  @Uint32()
+  external int sync_mode;
   @Uint32()
   external int dropped_frame_count;
 }

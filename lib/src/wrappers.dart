@@ -240,9 +240,11 @@ class Receiver {
         width: ref.width,
         height: ref.height,
         format: TextureFormat.fromValue(ref.format),
+        semanticFormat: TextureFormat.fromValue(ref.semantic_format),
         estimatedFps: ref.estimated_fps,
         frameCounter: ref.frame_counter,
         lastUpdateTimeNs: ref.last_update_time_ns,
+        nativeFormatModifier: ref.native_format_modifier,
       );
     } finally {
       malloc.free(outInfo);
@@ -281,6 +283,9 @@ class Frame {
         width: ref.width,
         height: ref.height,
         format: TextureFormat.fromValue(ref.format),
+        semanticFormat: TextureFormat.fromValue(ref.semantic_format),
+        transferMode: TransferMode.fromValue(ref.transfer_mode),
+        syncMode: SyncMode.fromValue(ref.sync_mode),
         droppedFrameCount: ref.dropped_frame_count,
       );
     } finally {
