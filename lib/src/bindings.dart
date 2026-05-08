@@ -19,6 +19,10 @@ base class NativeNozzleSenderDesc extends Struct {
   external int ring_buffer_size;
   @Int32()
   external int allow_format_fallback;
+  @Uint32()
+  external int fallback_flags;
+  @Int32()
+  external int fallback_flags_valid;
 }
 
 base class NativeNozzleReceiverDesc extends Struct {

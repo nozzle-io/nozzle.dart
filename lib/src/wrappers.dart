@@ -103,7 +103,8 @@ class Sender {
       ..name = cName
       ..application_name = cAppName
       ..ring_buffer_size = desc.ringBufferSize
-      ..allow_format_fallback = desc.allowFormatFallback ? 1 : 0;
+      ..fallback_flags_valid = 1
+      ..fallback_flags = 3;
 
     final outSender = malloc<Pointer<NozzleSender>>();
     try {
