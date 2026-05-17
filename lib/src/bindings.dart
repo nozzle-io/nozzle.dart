@@ -205,11 +205,11 @@ typedef _TextureWrapNative = Uint32 Function(Pointer<NativeNozzleTextureWrapDesc
     Pointer<Pointer<NozzleTexture>>);
 typedef _TextureDestroyNative = Void Function(NozzleTexturePtr);
 typedef _SwizzleChannelsNative = Uint32 Function(Pointer<Void>, Pointer<Void>,
-    Uint32, Uint32, Uint32, Uint32, Uint32, Pointer<Uint8>);
+    Uint32, Uint32, Int64, Int64, Uint32, Pointer<Uint8>);
 typedef _WidenUint16ToUint32Native = Uint32 Function(Pointer<Void>,
-    Pointer<Void>, Uint32, Uint32, Uint32, Uint32, Uint32);
+    Pointer<Void>, Uint32, Uint32, Int64, Int64, Uint32);
 typedef _ConvertUint32ToFloat32Native = Uint32 Function(Pointer<Void>,
-    Pointer<Void>, Uint32, Uint32, Uint32, Uint32, Uint32);
+    Pointer<Void>, Uint32, Uint32, Int64, Int64, Uint32);
 
 // ========== Dart Function Typedefs ==========
 
