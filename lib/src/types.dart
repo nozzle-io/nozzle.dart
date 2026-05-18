@@ -13,7 +13,8 @@ enum ErrorCode {
   senderNotFound(8),
   senderClosed(9),
   timeout(10),
-  backendError(11);
+  backendError(11),
+  commandFailed(12);
 
   const ErrorCode(this.value);
   final int value;
@@ -34,6 +35,7 @@ enum ErrorCode {
         ErrorCode.senderClosed => 'sender closed',
         ErrorCode.timeout => 'timeout',
         ErrorCode.backendError => 'backend error',
+        ErrorCode.commandFailed => 'command execution failed',
       };
 }
 
