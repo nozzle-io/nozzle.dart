@@ -30,6 +30,15 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
 
+      # nozzle-dev#198: sources.mk runs `cat` through make's shell, and this job
+      # uses plain make rather than MSYS2. Record which tools it really used.
+      - name: Show make toolchain (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Get-Command make, cat, sh, c++ | Format-List Name, Source
+          make --version
+          make -p -n 2>$null | Select-String -Pattern '^(SHELL|COMSPEC|MAKE_VERSION|CXX) '
+
       - name: Build native library
         run: make
 
