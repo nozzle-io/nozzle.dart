@@ -16,6 +16,8 @@ endif
 CXXFLAGS := -std=c++17 -fno-exceptions -fno-rtti -O2 -fPIC
 
 include $(NOZZLE_DIR)/sources/sources.mk
+# The build output depends on these lists as well as on its objects.
+NOZZLE_SOURCE_INPUTS := $(wildcard $(NOZZLE_DIR)/sources/*)
 
 COMMON_SRCS := $(NOZZLE_COMMON_SRCS) $(NOZZLE_OPENGL_SRCS)
 
@@ -52,9 +54,9 @@ ALL_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(patsubst %.mm,$(BUILD_DIR)/%.o,$
 
 all: $(LIB)
 
-$(LIB): $(ALL_OBJS)
+$(LIB): $(ALL_OBJS) $(NOZZLE_SOURCE_INPUTS)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(ALL_OBJS) $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
