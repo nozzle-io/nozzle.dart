@@ -112,8 +112,7 @@ enum TextureFormat {
         TextureFormat.r32Uint ||
         TextureFormat.depth32Float =>
           4,
-        TextureFormat.rgb16Unorm ||
-        TextureFormat.rgb16Float ||
+        TextureFormat.rgb16Unorm || TextureFormat.rgb16Float => 6,
         TextureFormat.rgba16Unorm ||
         TextureFormat.rgba16Float ||
         TextureFormat.rg32Float =>
