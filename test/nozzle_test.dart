@@ -124,9 +124,7 @@ void main() {
       expect(TextureFormat.r32Float.bytesPerPixel, 4);
       expect(TextureFormat.r32Uint.bytesPerPixel, 4);
       expect(TextureFormat.depth32Float.bytesPerPixel, 4);
-      expect(TextureFormat.rgb16Unorm.bytesPerPixel, 8);
       expect(TextureFormat.rgba16Unorm.bytesPerPixel, 8);
-      expect(TextureFormat.rgb16Float.bytesPerPixel, 8);
       expect(TextureFormat.rgba16Float.bytesPerPixel, 8);
       expect(TextureFormat.rg32Float.bytesPerPixel, 8);
       expect(TextureFormat.rgba32Float.bytesPerPixel, 16);
@@ -135,6 +133,12 @@ void main() {
       expect(TextureFormat.rgb32Uint.bytesPerPixel, 12);
       expect(TextureFormat.unknown.bytesPerPixel, 0);
     });
+
+    for (final format in [TextureFormat.rgb16Unorm, TextureFormat.rgb16Float]) {
+      test('${format.name} packs three 16-bit components', () {
+        expect(format.bytesPerPixel, 3 * 2);
+      });
+    }
   });
 
   group('ReceiveMode', () {
