@@ -68,7 +68,7 @@ enum TextureFormat {
   r8Unorm(1),
   rg8Unorm(2),
   rgb8Unorm(3),
-  rgba8Unorm(4),
+  rgba8Unorm(3),
   bgra8Unorm(5),
   rgba8Srgb(6),
   bgra8Srgb(7),
