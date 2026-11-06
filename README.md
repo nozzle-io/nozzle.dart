@@ -35,6 +35,10 @@ dart test
 
 ## Usage
 
+These snippets show the successful lifecycle sequence. Keep senders and receivers
+open until their frame operations are finished; `close()` destroys the native
+object. The current binding does not guard subsequent operations on closed objects.
+
 ### Sender
 
 ```dart
@@ -45,8 +49,6 @@ final sender = Sender.create(const SenderDesc(
   applicationName: 'MyApp',
   ringBufferSize: 3,
 ));
-sender.close();
-
 final frame = sender.acquireWritableFrame(1920, 1080, TextureFormat.rgba8Unorm);
 final pixels = frame.lockWritablePixels(TextureOrigin.topLeft);
 for (var y = 0; y < pixels.height; y++) {
@@ -57,6 +59,11 @@ for (var y = 0; y < pixels.height; y++) {
 }
 pixels.unmap();
 sender.commitFrame(frame);
+frame.release(); // commitFrame does not release the C frame wrapper.
+
+// Keep sender alive while receivers need the published texture.
+// At application shutdown, after all publishing is finished:
+sender.close();
 ```
 
 ### Receiver
@@ -67,13 +74,18 @@ final receiver = Receiver.create(const ReceiverDesc(
   applicationName: 'MyViewer',
   receiveMode: ReceiveMode.latestOnly,
 ));
-receiver.close();
-
 final frame = receiver.acquireFrame(timeoutMs: 5000);
 final info = frame.info();
 print('${info.width}x${info.height} frame #${info.frameIndex}');
 frame.release();
+receiver.close();
 ```
+
+Do not close a sender immediately after publishing in a running application: it
+unpublishes that sender. The white-fill example is not a channel-order test.
+These snippets do not demonstrate failed writable-frame recovery; the current
+Dart wrapper has no explicit discard method. Releasing a frame wrapper alone is
+not a substitute for discarding an uncommitted sender reservation.
 
 ### Discovery
 
