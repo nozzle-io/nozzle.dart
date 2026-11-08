@@ -102,9 +102,57 @@ if (isGpuAvailable()) {
 }
 ```
 
+### Owned Metadata and Connection State
+
+`Sender.info()` and `Receiver.connectedInfo()` use caller-owned native snapshots
+and return owned Dart strings and values. Existing signatures, metadata fields
+(including `nativeFormatModifier`), defaults, and native-error behavior remain
+unchanged. Discovery keeps its separate enumeration allocation/free contract.
+
+`Receiver.connectionSnapshot()` returns a `ConnectionSnapshot` with `connected`
+and `info` copied together by one native call. `connectedInfo()` projects its
+metadata, including the last-known identity after an observed disconnect.
+`isConnected` reads the snapshot flag and returns false on `NozzleException`;
+successful metadata retrieval alone no longer means connected. These getters
+report last-observed state, not fresh liveness or an automatic reconnect.
+
+Inline strings are decoded only within their native capacities and before
+freeing the snapshot allocation. UTF-8 decoding remains strict: malformed data
+throws `FormatException`, not silent replacement or a false connection result.
+Returned values survive later calls and handle closure. This does not add
+thread/race safety or make operations on closed handles valid; keep the existing
+open-handle lifetime discipline.
+
+The loaded native library must provide `nozzle_sender_get_info_snapshot` and
+`nozzle_receiver_get_connected_info_snapshot` in addition to the existing
+exports; the pinned core includes both. There is no borrowed-getter fallback.
+Custom `NozzleBindings` implementations passed to `Nozzle.reload` must implement
+these two additional methods and fill the complete inline snapshot structs.
+Legacy low-level getters remain available, but the high-level getters no longer
+use them.
+
+### Metadata Test Boundaries
+
+The normal CI test run discovers two required macOS same-process metadata cases
+in `test/info_snapshot_test.dart`, using the locally built core dylib and real
+Metal-backed handles. They check exact `senderClosed` after sender closure,
+retained identity with a false connection flag, and owned UTF-8 values after both
+handles close. Library/backend failures fail these cases; the existing optional
+GPU tests and their skips are unchanged. These cases publish no frames and make
+no pixel, cross-process, or Windows/Linux receiver-lifecycle claim.
+
+All three OS jobs also run compiler-derived snapshot layout checks and synthetic
+conversion checks through the [header-only probe](test/native/README.md), while
+retaining the legacy ABI regressions. Synthetic fractional FPS and counters above
+32 bits prove conversion, not observed native stream values or the full unsigned
+64-bit range in Dart. Windows/Linux builds and portable checks do not substitute
+for macOS lifecycle evidence.
+
 ## Error Handling
 
-All fallible operations throw [NozzleException] with a descriptive [ErrorCode]:
+Native error codes are reported as [NozzleException] with a descriptive
+[ErrorCode]. Strict snapshot UTF-8 decoding can separately throw
+`FormatException` as described above:
 
 ```dart
 try {

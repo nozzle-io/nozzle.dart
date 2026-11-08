@@ -1,7 +1,9 @@
-# Connected-Info ABI Probe
+# Metadata ABI Probe
 
 The probe compiles against `deps/nozzle/include/nozzle/nozzle_c.h` and exports
-native `sizeof`, modifier `offsetof`, and a header-typed fill fixture. It does
+native `sizeof`, modifier `offsetof`, and a header-typed legacy fill fixture.
+It also exports both snapshot sizes, every snapshot field's offset and width
+(including inline array capacities), and header-typed synthetic snapshot fills. It does
 not link core, call a real getter, create a receiver, or exercise a GPU backend.
 The Dart tests allocate aligned storage large enough for both layouts plus a
 guard; they never let the native fixture overwrite an undersized allocation.
@@ -42,8 +44,20 @@ After `dart pub get`, the focused command is:
 
 ```sh
 dart test test/connected_info_abi_test.dart --reporter expanded
+dart test test/info_snapshot_conversion_test.dart --reporter expanded
 ```
 
-CI runs the full `dart test --reporter expanded` once, including all three
-independent ABI cases. These prove layout and fixture decoding only, not runtime
-getter overwrite reproduction or connection-state behavior.
+CI runs the full `dart test --reporter expanded` once, retaining all three legacy
+ABI cases and adding snapshot size/capacity/offset checks, strict bounded UTF-8
+decoding, and owned conversion after native storage is overwritten and freed.
+Snapshot tests also allocate the maximum of native and Dart sizes, plus a guard,
+before any native fill. There is no copied numeric struct-size oracle.
+
+The synthetic fills use fractional FPS and integer values above 32 bits but
+below the signed 64-bit limit. They check all existing public metadata fields,
+not real stream statistics or Dart's full unsigned 64-bit behavior. These probe
+tests are not runtime getter or GPU evidence. The separate macOS-only
+`test/info_snapshot_test.dart` exercises real public getters, sender closure and
+owned values against the locally built core; it requires no fixture fill and
+does not bypass the real backend. Other platforms exclude that file rather than
+claiming receiver-lifecycle coverage.

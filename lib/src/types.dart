@@ -299,6 +299,14 @@ class ConnectedSenderInfo {
   final int nativeFormatModifier;
 }
 
+/// Owned metadata and last-observed connection state, not a fresh liveness check.
+class ConnectionSnapshot {
+  const ConnectionSnapshot({required this.connected, required this.info});
+
+  final bool connected;
+  final ConnectedSenderInfo info;
+}
+
 /// Metadata about a frame.
 class FrameInfo {
   const FrameInfo({

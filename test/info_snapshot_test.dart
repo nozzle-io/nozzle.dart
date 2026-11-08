@@ -47,6 +47,7 @@ void main() {
 
     final senderInfo = sender.info();
     final before = receiver.connectedInfo();
+    final initialSnapshot = receiver.connectionSnapshot();
     expect(senderInfo.name, name);
     expect(senderInfo.applicationName, _application);
     expect(senderInfo.id, isNotEmpty);
@@ -56,6 +57,11 @@ void main() {
     expect(before.id, senderInfo.id);
     expect(before.backend, BackendType.metal);
     expect(receiver.isConnected, isTrue);
+    expect(initialSnapshot.connected, isTrue);
+    expect(initialSnapshot.info.name, before.name);
+    expect(initialSnapshot.info.applicationName, before.applicationName);
+    expect(initialSnapshot.info.id, before.id);
+    expect(initialSnapshot.info.backend, before.backend);
 
     // No writable frames or mappings retain the sender after close.
     sender.close();
@@ -73,6 +79,14 @@ void main() {
     stdout.writeln('METADATA_NATIVE acquire=senderClosed '
         'retained_id=${after.id} connected=$connected');
     expect(connected, isFalse);
+    final disconnected = receiver.connectionSnapshot();
+    expect(disconnected.connected, isFalse);
+    expect(disconnected.info.name, after.name);
+    expect(disconnected.info.applicationName, after.applicationName);
+    expect(disconnected.info.id, after.id);
+    expect(disconnected.info.backend, after.backend);
+    expect(initialSnapshot.connected, isTrue);
+    expect(initialSnapshot.info.id, before.id);
   });
 
   test('native metadata owns UTF8 values after later calls and both closes', () {
@@ -90,6 +104,7 @@ void main() {
 
     final senderInfo = sender.info();
     final connectedInfo = receiver.connectedInfo();
+    final snapshot = receiver.connectionSnapshot();
     expect(sender.info().id, senderInfo.id);
     expect(receiver.connectedInfo().id, connectedInfo.id);
     receiver.close();
@@ -104,6 +119,11 @@ void main() {
     expect(connectedInfo.applicationName, _application);
     expect(connectedInfo.id, senderInfo.id);
     expect(connectedInfo.backend, senderInfo.backend);
+    expect(snapshot.connected, isTrue);
+    expect(snapshot.info.name, name);
+    expect(snapshot.info.applicationName, _application);
+    expect(snapshot.info.id, senderInfo.id);
+    expect(snapshot.info.backend, senderInfo.backend);
     stdout.writeln('METADATA_NATIVE owned_UTF8_after_close id=${senderInfo.id}');
   });
 }

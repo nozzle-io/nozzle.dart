@@ -73,6 +73,54 @@ base class NativeNozzleConnectedSenderInfo extends Struct {
   external int native_format_modifier;
 }
 
+const senderNameCapacity = 64;
+const applicationNameCapacity = 64;
+const senderIdCapacity = 37;
+
+base class NativeNozzleSenderInfoSnapshot extends Struct {
+  @Array(senderNameCapacity)
+  external Array<Uint8> name;
+  @Array(applicationNameCapacity)
+  external Array<Uint8> application_name;
+  @Array(senderIdCapacity)
+  external Array<Uint8> id;
+  @Uint32()
+  external int backend;
+}
+
+base class NativeNozzleConnectedSenderSnapshot extends Struct {
+  @Array(senderNameCapacity)
+  external Array<Uint8> name;
+  @Array(applicationNameCapacity)
+  external Array<Uint8> application_name;
+  @Array(senderIdCapacity)
+  external Array<Uint8> id;
+  @Uint32()
+  external int connected;
+  @Uint32()
+  external int backend;
+  @Uint32()
+  external int width;
+  @Uint32()
+  external int height;
+  @Uint32()
+  external int format;
+  @Uint32()
+  external int semantic_format;
+  @Double()
+  external double estimated_fps;
+  @Uint64()
+  external int frame_counter;
+  @Uint64()
+  external int last_update_time_ns;
+  @Uint32()
+  external int native_format_kind;
+  @Uint32()
+  external int native_format_value;
+  @Uint64()
+  external int native_format_modifier;
+}
+
 base class NativeNozzleFrameInfo extends Struct {
   @Uint64()
   external int frame_index;
@@ -176,6 +224,8 @@ typedef _SenderPublishNativeTextureNative = Uint32 Function(
     NozzleSenderPtr, Pointer<Void>, Uint32, Uint32, Uint32);
 typedef _SenderGetInfoNative = Uint32 Function(
     NozzleSenderPtr, Pointer<NativeNozzleSenderInfo>);
+typedef _SenderGetInfoSnapshotNative = Uint32 Function(
+    NozzleSenderPtr, Pointer<NativeNozzleSenderInfoSnapshot>);
 typedef _ReceiverCreateNative = Uint32 Function(
     Pointer<NativeNozzleReceiverDesc>, Pointer<Pointer<NozzleReceiver>>);
 typedef _ReceiverDestroyNative = Void Function(NozzleReceiverPtr);
@@ -183,6 +233,8 @@ typedef _ReceiverAcquireFrameNative = Uint32 Function(NozzleReceiverPtr,
     Pointer<NativeNozzleAcquireDesc>, Pointer<Pointer<NozzleFrame>>);
 typedef _ReceiverGetConnectedInfoNative = Uint32 Function(NozzleReceiverPtr,
     Pointer<NativeNozzleConnectedSenderInfo>);
+typedef _ReceiverGetConnectedInfoSnapshotNative = Uint32 Function(
+    NozzleReceiverPtr, Pointer<NativeNozzleConnectedSenderSnapshot>);
 typedef _FrameReleaseNative = Void Function(NozzleFramePtr);
 typedef _FrameGetInfoNative = Uint32 Function(
     NozzleFramePtr, Pointer<NativeNozzleFrameInfo>);
@@ -232,6 +284,8 @@ typedef _SenderPublishNativeTextureDart = int Function(
     NozzleSenderPtr, Pointer<Void>, int, int, int);
 typedef _SenderGetInfoDart = int Function(
     NozzleSenderPtr, Pointer<NativeNozzleSenderInfo>);
+typedef _SenderGetInfoSnapshotDart = int Function(
+    NozzleSenderPtr, Pointer<NativeNozzleSenderInfoSnapshot>);
 typedef _ReceiverCreateDart = int Function(
     Pointer<NativeNozzleReceiverDesc>, Pointer<Pointer<NozzleReceiver>>);
 typedef _ReceiverDestroyDart = void Function(NozzleReceiverPtr);
@@ -239,6 +293,8 @@ typedef _ReceiverAcquireFrameDart = int Function(NozzleReceiverPtr,
     Pointer<NativeNozzleAcquireDesc>, Pointer<Pointer<NozzleFrame>>);
 typedef _ReceiverGetConnectedInfoDart = int Function(NozzleReceiverPtr,
     Pointer<NativeNozzleConnectedSenderInfo>);
+typedef _ReceiverGetConnectedInfoSnapshotDart = int Function(
+    NozzleReceiverPtr, Pointer<NativeNozzleConnectedSenderSnapshot>);
 typedef _FrameReleaseDart = void Function(NozzleFramePtr);
 typedef _FrameGetInfoDart = int Function(
     NozzleFramePtr, Pointer<NativeNozzleFrameInfo>);
@@ -287,6 +343,8 @@ abstract class NozzleBindings {
       Pointer<Void> nativeTexture, int width, int height, int format);
   int nozzle_sender_get_info(
       NozzleSenderPtr sender, Pointer<NativeNozzleSenderInfo> outInfo);
+  int nozzle_sender_get_info_snapshot(
+      NozzleSenderPtr sender, Pointer<NativeNozzleSenderInfoSnapshot> outInfo);
   int nozzle_receiver_create(Pointer<NativeNozzleReceiverDesc> desc,
       Pointer<Pointer<NozzleReceiver>> out_receiver);
   void nozzle_receiver_destroy(NozzleReceiverPtr receiver);
@@ -294,6 +352,8 @@ abstract class NozzleBindings {
       Pointer<NativeNozzleAcquireDesc> desc, Pointer<Pointer<NozzleFrame>> out);
   int nozzle_receiver_get_connected_info(NozzleReceiverPtr receiver,
       Pointer<NativeNozzleConnectedSenderInfo> outInfo);
+  int nozzle_receiver_get_connected_info_snapshot(NozzleReceiverPtr receiver,
+      Pointer<NativeNozzleConnectedSenderSnapshot> outInfo);
   void nozzle_frame_release(NozzleFramePtr frame);
   int nozzle_frame_get_info(
       NozzleFramePtr frame, Pointer<NativeNozzleFrameInfo> outInfo);
@@ -383,6 +443,8 @@ class _FfiBindings implements NozzleBindings {
         _SenderPublishNativeTextureDart>('nozzle_sender_publish_native_texture');
     _senderGetInfo = lib.lookupFunction<_SenderGetInfoNative, _SenderGetInfoDart>(
         'nozzle_sender_get_info');
+    _senderGetInfoSnapshot = lib.lookupFunction<_SenderGetInfoSnapshotNative,
+        _SenderGetInfoSnapshotDart>('nozzle_sender_get_info_snapshot');
     _receiverCreate = lib.lookupFunction<_ReceiverCreateNative,
         _ReceiverCreateDart>('nozzle_receiver_create');
     _receiverDestroy = lib.lookupFunction<_ReceiverDestroyNative,
@@ -392,6 +454,10 @@ class _FfiBindings implements NozzleBindings {
     _receiverGetConnectedInfo = lib.lookupFunction<
         _ReceiverGetConnectedInfoNative,
         _ReceiverGetConnectedInfoDart>('nozzle_receiver_get_connected_info');
+    _receiverGetConnectedInfoSnapshot = lib.lookupFunction<
+        _ReceiverGetConnectedInfoSnapshotNative,
+        _ReceiverGetConnectedInfoSnapshotDart>(
+        'nozzle_receiver_get_connected_info_snapshot');
     _frameRelease = lib.lookupFunction<_FrameReleaseNative, _FrameReleaseDart>(
         'nozzle_frame_release');
     _frameGetInfo = lib.lookupFunction<_FrameGetInfoNative, _FrameGetInfoDart>(
@@ -443,10 +509,13 @@ class _FfiBindings implements NozzleBindings {
   late final _SenderPublishGlTextureDart _senderPublishGlTexture;
   late final _SenderPublishNativeTextureDart _senderPublishNativeTexture;
   late final _SenderGetInfoDart _senderGetInfo;
+  late final _SenderGetInfoSnapshotDart _senderGetInfoSnapshot;
   late final _ReceiverCreateDart _receiverCreate;
   late final _ReceiverDestroyDart _receiverDestroy;
   late final _ReceiverAcquireFrameDart _receiverAcquireFrame;
   late final _ReceiverGetConnectedInfoDart _receiverGetConnectedInfo;
+  late final _ReceiverGetConnectedInfoSnapshotDart
+      _receiverGetConnectedInfoSnapshot;
   late final _FrameReleaseDart _frameRelease;
   late final _FrameGetInfoDart _frameGetInfo;
   late final _FrameLockPixelsDart _frameLockPixels;
@@ -505,6 +574,11 @@ class _FfiBindings implements NozzleBindings {
       _senderGetInfo(sender, outInfo);
 
   @override
+  int nozzle_sender_get_info_snapshot(NozzleSenderPtr sender,
+          Pointer<NativeNozzleSenderInfoSnapshot> outInfo) =>
+      _senderGetInfoSnapshot(sender, outInfo);
+
+  @override
   int nozzle_receiver_create(Pointer<NativeNozzleReceiverDesc> desc,
           Pointer<Pointer<NozzleReceiver>> outReceiver) =>
       _receiverCreate(desc, outReceiver);
@@ -523,6 +597,11 @@ class _FfiBindings implements NozzleBindings {
   int nozzle_receiver_get_connected_info(NozzleReceiverPtr receiver,
           Pointer<NativeNozzleConnectedSenderInfo> outInfo) =>
       _receiverGetConnectedInfo(receiver, outInfo);
+
+  @override
+  int nozzle_receiver_get_connected_info_snapshot(NozzleReceiverPtr receiver,
+          Pointer<NativeNozzleConnectedSenderSnapshot> outInfo) =>
+      _receiverGetConnectedInfoSnapshot(receiver, outInfo);
 
   @override
   void nozzle_frame_release(NozzleFramePtr frame) => _frameRelease(frame);
