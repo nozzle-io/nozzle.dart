@@ -42,6 +42,20 @@ jobs:
       - name: Build native library
         run: make
 
+      - name: Build header-only connected-info ABI probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          c++ --version
+          case "$RUNNER_OS" in
+            macOS) suffix=dylib; flags="-dynamiclib -fPIC" ;;
+            Windows) suffix=dll; flags="-shared" ;;
+            Linux) suffix=so; flags="-shared -fPIC" ;;
+            *) echo "unsupported ABI probe platform: $RUNNER_OS" >&2; exit 1 ;;
+          esac
+          c++ -x c -std=c11 $flags -Ideps/nozzle/include \
+            test/native/info_abi_probe.c -o ".build/nozzle_info_abi.$suffix"
+
       - name: Dart pub get
         run: dart pub get
 
@@ -49,7 +63,7 @@ jobs:
         run: dart analyze
 
       - name: Dart test
-        run: dart test
+        run: dart test --reporter expanded
 
       # nozzle-dev#197: `-shared` links with undefined symbols allowed, so a core source
       # missing from the Makefile's hand-written list leaves a green build that fails
