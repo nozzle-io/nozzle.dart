@@ -84,6 +84,9 @@ void main() {
           reason: 'Native fixture control at the header-derived offset');
       expect(decoded, _modifier,
           reason: 'Native kind/value bytes must not be decoded as the modifier');
+      final info = storage.cast<NativeNozzleConnectedSenderInfo>().ref;
+      expect(info.native_format_kind, 2); // NOZZLE_NATIVE_KIND_DXGI_FORMAT
+      expect(info.native_format_value, 0x10203040);
     } finally {
       calloc.free(storage);
     }

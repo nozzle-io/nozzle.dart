@@ -65,6 +65,10 @@ base class NativeNozzleConnectedSenderInfo extends Struct {
   external int frame_counter;
   @Uint64()
   external int last_update_time_ns;
+  @Uint32()
+  external int native_format_kind;
+  @Uint32()
+  external int native_format_value;
   @Uint64()
   external int native_format_modifier;
 }
