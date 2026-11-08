@@ -124,12 +124,15 @@ thread/race safety or make operations on closed handles valid; keep the existing
 open-handle lifetime discipline.
 
 The loaded native library must provide `nozzle_sender_get_info_snapshot` and
-`nozzle_receiver_get_connected_info_snapshot` in addition to the existing
-exports; the pinned core includes both. There is no borrowed-getter fallback.
+`nozzle_receiver_get_connected_info_snapshot` alongside the other bound exports;
+the pinned core includes both. There is no borrowed-getter fallback.
 Custom `NozzleBindings` implementations passed to `Nozzle.reload` must implement
-these two additional methods and fill the complete inline snapshot structs.
-Legacy low-level getters remain available, but the high-level getters no longer
-use them.
+these two methods and fill the complete inline snapshot structs.
+The unused legacy getter methods, their eager symbol lookups, and
+`NativeNozzleConnectedSenderInfo` have been removed from `lib/src/bindings.dart`.
+Low-level clients must use the snapshot methods and structs instead; custom
+bindings should remove obsolete getter overrides. Discovery still uses
+`NativeNozzleSenderInfo` and its separate enumeration/free functions.
 
 ### Metadata Test Boundaries
 
@@ -142,11 +145,16 @@ GPU tests and their skips are unchanged. These cases publish no frames and make
 no pixel, cross-process, or Windows/Linux receiver-lifecycle claim.
 
 All three OS jobs also run compiler-derived snapshot layout checks and synthetic
-conversion checks through the [header-only probe](test/native/README.md), while
-retaining the legacy ABI regressions. Synthetic fractional FPS and counters above
-32 bits prove conversion, not observed native stream values or the full unsigned
-64-bit range in Dart. Windows/Linux builds and portable checks do not substitute
-for macOS lifecycle evidence.
+conversion checks through the [header-only probe](test/native/README.md). The
+obsolete connected-info ABI regressions were retired with the unused struct;
+snapshot layout and conversion tests are unchanged. Synthetic fractional FPS and
+counters above 32 bits prove conversion, not observed native stream values or the
+full unsigned 64-bit range in Dart. Windows/Linux builds and portable checks do
+not substitute for macOS lifecycle evidence.
+
+The pinned core still exports the legacy getters. Removing their Dart lookups is
+preparation for core ABI retirement, not runtime proof of loading a library with
+those exports absent; that requires validation against the removal candidate.
 
 ## Error Handling
 
