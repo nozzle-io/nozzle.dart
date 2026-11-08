@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import 'bindings.dart';
+import 'info_snapshot.dart';
 import 'types.dart';
 
 class Nozzle {
@@ -159,16 +160,10 @@ class Sender {
   }
 
   SenderInfo info() {
-    final outInfo = malloc<NativeNozzleSenderInfo>();
+    final outInfo = malloc<NativeNozzleSenderInfoSnapshot>();
     try {
-      _checkOk(_bindings.nozzle_sender_get_info(_ptr, outInfo));
-      final ref = outInfo.ref;
-      return SenderInfo(
-        name: ref.name.toDartString(),
-        applicationName: ref.application_name.toDartString(),
-        id: ref.id.toDartString(),
-        backend: BackendType.fromValue(ref.backend),
-      );
+      _checkOk(_bindings.nozzle_sender_get_info_snapshot(_ptr, outInfo));
+      return senderInfoFromSnapshot(outInfo.ref);
     } finally {
       malloc.free(outInfo);
     }
@@ -229,24 +224,17 @@ class Receiver {
   }
 
   ConnectedSenderInfo connectedInfo() {
-    final outInfo = malloc<NativeNozzleConnectedSenderInfo>();
+    return connectionSnapshot().info;
+  }
+
+  /// Copies last-observed state and metadata together, retaining disconnected
+  /// identity without performing a fresh liveness check.
+  ConnectionSnapshot connectionSnapshot() {
+    final outInfo = malloc<NativeNozzleConnectedSenderSnapshot>();
     try {
-      _checkOk(_bindings.nozzle_receiver_get_connected_info(_ptr, outInfo));
-      final ref = outInfo.ref;
-      return ConnectedSenderInfo(
-        name: ref.name.toDartString(),
-        applicationName: ref.application_name.toDartString(),
-        id: ref.id.toDartString(),
-        backend: BackendType.fromValue(ref.backend),
-        width: ref.width,
-        height: ref.height,
-        format: TextureFormat.fromValue(ref.format),
-        semanticFormat: TextureFormat.fromValue(ref.semantic_format),
-        estimatedFps: ref.estimated_fps,
-        frameCounter: ref.frame_counter,
-        lastUpdateTimeNs: ref.last_update_time_ns,
-        nativeFormatModifier: ref.native_format_modifier,
-      );
+      _checkOk(
+          _bindings.nozzle_receiver_get_connected_info_snapshot(_ptr, outInfo));
+      return connectionSnapshotFromNative(outInfo.ref);
     } finally {
       malloc.free(outInfo);
     }
@@ -254,8 +242,7 @@ class Receiver {
 
   bool get isConnected {
     try {
-      connectedInfo();
-      return true;
+      return connectionSnapshot().connected;
     } on NozzleException {
       return false;
     }
